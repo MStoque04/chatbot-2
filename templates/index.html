@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    <div class="chat-container">
+        <div id="chatbox" class="chatbox">
+            <!-- Mensagens do chat serão adicionadas aqui -->
+            <div class="center-image">
+                <img src="/static/download.png" alt="Download Image" width="100px">
+        </div>
+        
+        </div>
+
+        <div class="input-container">
+            <img src="C:\Users\mstoq\OneDrive\Área de Trabalho\T.i\chatbot\templates\download.png" alt="">
+            <input type="file" id="file-input" class="file-input" style="display:none;" onchange="uploadFile()">
+            <button onclick="document.getElementById('file-input').click()" class="upload-btn">Upload Documento</button>
+            <input type="text" id="user-input" class="text-input" placeholder="Digite sua pergunta...">
+            <button  onclick="sendMessage()"class="send-btn"><i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+   
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById("file-input");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Por favor, selecione um arquivo primeiro.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.error) {
+                    console.error(data.error);
+                    addMessageToChatbox("Bot: " + data.error, "bot-message");
+                } else {
+                    addMessageToChatbox("Bot: " + data.response, "bot-message");
+                }
+            } catch (error) {
+                console.error("Error uploading file:", error);
+            }
+        }
+
+        async function sendMessage() {
+            const inputField = document.getElementById("user-input");
+            const userMessage = inputField.value;
+            if (!userMessage) return;
+
+            addMessageToChatbox("Você: " + userMessage, "user-message");
+            inputField.value = "";
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ message: userMessage })
+                });
+                const data = await response.json();
+                if (data.error) {
+                    console.error(data.error);
+                    addMessageToChatbox("Bot: " + data.error, "bot-message");
+                } else {
+                    addMessageToChatbox("Bot: " + data.response, "bot-message");
+                }
+            } catch (error) {
+                console.error("Error sending message:", error);
+            }
+        }
+
+        function addMessageToChatbox(message, className) {
+            const chatbox = document.getElementById("chatbox");
+            const messageElement = document.createElement("div");
+            messageElement.className = className;
+            messageElement.textContent = message;
+            chatbox.appendChild(messageElement);
+            chatbox.scrollTop = chatbox.scrollHeight; // Scroll to the bottom
+        }
+
+        document.getElementById("user-input").addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+
+
+   </div> 
+</body>
+</html>
